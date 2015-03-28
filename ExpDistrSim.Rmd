@@ -1,0 +1,66 @@
+---
+title: "A Simulation of Exponential Distribution"
+author: "Zhongyu"
+output: pdf_document
+---
+# Overview
+This project verified that Central Limit Theorem is applicable to exponential distribution.
+
+# Simulation
+Both the mean and standard deviation of [exponential distribution](http://en.wikipedia.org/wiki/Exponential_distribution) are determined by parameter lambda, and can be calculated by 1/lambda. For each simulation, lambda is fixed to 0.2, and 40 observations are collected. The mean and variance for each simulation are collected.
+```{r simulation code,echo=TRUE}
+expdistr <- rexp(1000, rate=.2);expmeans <- NULL; expvars <- NULL;
+for (i in 1:1000){expmeans <- c(expmeans, mean(rexp(40, rate = .2)));
+                  expvars <- c(expvars, var(rexp(440, rate = .2)))}
+simdata <- data.frame(expdistr, expmeans, expvars)
+```
+
+# Sample Mean versus Theoretical Mean
+```{r sample mean distribution,echo=FALSE}
+library(ggplot2); p <- ggplot(simdata, aes(x=expmeans, fill="means"))
+p <- p + geom_histogram(binwidth=.3,colour="seagreen3",aes(y=..density..))
+p <- p + geom_vline(xintercept=5, size=1.5, colour="black")
+p <- p + stat_function(fun=dnorm, 
+        args=list(mean=mean(simdata$expmeans),sd=sd(simdata$expmeans)),size=1.5, colour="cornflowerblue")
+p + labs(title="Distribution of Means of Exponential Distribution (n=40,lambda=0.2)") + xlab("sampled means")
+```
+
+```{r print out the simulation sampled mean,echo=FALSE,results=TRUE}
+simulatedmean <- mean(simdata$expmeans)
+print(paste0("the mean of simulated means is: ", as.character(simulatedmean)))
+```
+
+The sampling distribution of the 1000 simulated means of exponential distribution (n = 40 observations, lambda = 0.2) is plotted through following code, with the vertical black line denoting the theoretical mean 1/lambda = 5, and the blue bell curve depicting the normal distribution.The 1000 sampled/simulated means forms a normal distribution, and center around the black vertical line, x=1/lambda=5, which is the theoretical mean of the simulated exponential distribution. The mean of the sampled distribution of means (who is a set of realizations of a random variable) is exactly what the means are trying to estimate, therefore it is an unbiased estimate
+
+# Sample Varance versus Theoretical Varance
+The sampling distribution of the 1000 simulated variances of exponential distribution (n = 40 observations, lambda = 0.2) is plotted through following code, with the vertical black line denoting the theoretical variance (1/lambda)^2 = 25, and the blue bell curve depicting the normal distribution.
+```{r sample variance distribution,echo=FALSE}
+p <- ggplot(simdata, aes(x=expvars, fill="vars"))
+p <- p + geom_histogram(binwidth=1.2,colour="seagreen3",aes(y=..density..))
+p <- p + geom_vline(xintercept=25, size=1.5, colour="black")
+p <- p + stat_function(fun=dnorm, 
+                  args=list(mean=mean(simdata$expvars),sd=sd(simdata$expvars)),
+                  size=1.5, colour="cornflowerblue")
+p + labs(title="Distribution of Variances of Exponential Distribution (n=40,lambda=0.2)") + xlab("sampled variances")
+```
+
+```{r print out the simulation sampled variance,echo=FALSE,results=TRUE}
+simulatedvar <- mean(simdata$expvars)
+print(paste0("the mean of simulated variances is: ", simulatedvar))
+```
+
+The 1000 sampled/simulated variances forms a normal distribution, and center around the black vertical line, x=(1/lambda)^2=25, which is the theoretical variance of the simulated exponential distribution. The mean of the sampled distribution of variances (who is a set of realizations of one random variable) is exactly what the variances are trying to estimate, therefore it is an unbiased estimate.
+
+# Distribution
+A large collection of random exponentials is samples collected from the exponential distribution itself, therefore it is likely to see the values in the high probability density region appear more frequent in the collection. However, a large collection of averages of 40 exponentials is likely to present a normal distribution, which is stated in Central Limit Theorem, which is also verified by this study.
+```{r Distributions,echo=FALSE,results='hide'}
+library(reshape2)
+simdata2 <- melt(simdata,id.vars="expvars")
+p <- ggplot(simdata2,aes(x=value,fill=variable))
+p <- p + geom_density(alpha=.3,size=1)
+p <- p + stat_function(fun=dnorm, 
+                  args=list(mean=mean(simdata$expmeans),sd=sd(simdata$expmeans)),
+                  size=0.8, colour="green", linetype="dashed")
+p + labs(title="Density Distribution vs Distribution of Means of Expo Distribution") + xlim(0,25)
+```
+The figure showing above plots both the distribution of the 1000 simulated exponentials (the pink shaded area) and the distribution of the 1000 simulated distribution of averages/means of 40 exponentials (the blue shaded area). As it is indicating, the blue shaded area is pretty much overlapping the normal distribution curve which is plotted in the green dashed line, just as stated by Central Limit Theorem. 
